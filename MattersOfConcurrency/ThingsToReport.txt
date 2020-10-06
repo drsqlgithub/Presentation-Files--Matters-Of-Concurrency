@@ -1,0 +1,10 @@
+Add:
+
+??lock escalation percent
+??test cascade when no change occurs and locking
+
+Report:
+Looking at last query in DMV always ends up with the following text:
+DECLARE @edition sysname; SET @edition = cast(SERVERPROPERTY(N'EDITION') as sysname); select case when @edition = N'SQL Azure' then 2 else 1 end as 'DatabaseEngineType'
+
+connect.beta
