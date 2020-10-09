@@ -2,7 +2,7 @@ PRINT 'You tried to run the entire file'
 GO
 :EXIT
 
-USE LetMeFinish;
+USE MattersOfConcurrency;
 GO
 
 -------------------------------------------------
@@ -29,9 +29,23 @@ GO
 --		SHOW DB setting that allows you to not set the 
 --	    isolation level in the query
 -------------------------------------------------
-/*
-ALTER DATABASE LetMeFinish
-  SET MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT ON
+--not in a explicit transaction
+SELECT *
+FROM   Demo_Mem.SingleTable 
+GO
+
+--in an explicit transaction
+BEGIN TRANSACTION;
+
+SELECT *
+FROM   Demo_Mem.SingleTable 
+
+ROLLBACK TRANSACTION;
+GO
+
+--changes that behavior to allow it
+ALTER DATABASE MattersOfConcurrency
+  SET MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT ON;
 GO
 
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED
@@ -47,10 +61,9 @@ GO
 
 --in examples, I want to show isolation level explicitly and use the engine
 --to make sure I do
-ALTER DATABASE LetMeFinish
- SET MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT OFF
+ALTER DATABASE MattersOfConcurrency
+ SET MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT OFF;
 
- */
 --I will leave it as obvious that readers don't block readers in MVCC any more than
 --using locks
 
@@ -72,6 +85,7 @@ SET    Value = UPPER(Value)
 WHERE  Value = 'Fred';
 GO
 
+--**
 --stop
 
 COMMIT;
@@ -80,8 +94,8 @@ GO
 --Reset, before running scenario 3, because very few issues
 --happen at execution, mostly at COMMIT
 
-UPDATE Demo_Mem.SingleTable WITH(SNAPSHOT)
-SET    Value = 'Fred'
+UPDATE Demo_Mem.SingleTable WITH(SNAPSHOT) --big difference between on disk and mem opt demos. You need to commit to see the outcome 
+SET    Value = 'Fred'                      --which complicates matters
 WHERE  Value = 'Fred';
 GO
 
@@ -237,7 +251,7 @@ FROM   sys.dm_db_xtp_index_stats
        JOIN sys.indexes
            ON dm_db_xtp_index_stats.index_id = indexes.index_id
                AND dm_db_xtp_index_stats.object_id = indexes.object_id
-WHERE  indexes.name = 'AKsingleTable';
+WHERE  indexes.name = 'AKSingleTable';
 
 --reset
 DELETE FROM Demo_Mem.SingleTable
@@ -290,7 +304,7 @@ COMMIT;
 GO
 
 DELETE FROM Demo_Mem.SingleTable
-WHERE Value IN ( 'AlternateFred', 'AlternateBarney' );
+WHERE Value IN ( 'AlternateFred', 'AlternateBarney' ); 
 
 -------------------------------------------------
 -- Scenario 10:  Foreign Keys and Isolation Levels

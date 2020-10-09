@@ -1,42 +1,69 @@
-USE LetMeFinish;
+USE MattersOfConcurrency;
 GO
 
-DROP TABLE IF EXISTS demo_mem.SingleTable;
-DROP TABLE IF EXISTS demo_mem.Interaction;
-DROP TABLE IF EXISTS demo_mem.Person;
+DROP TABLE IF EXISTS Demo_Mem.SingleTable;
+DROP TABLE IF EXISTS Demo_Mem.Interaction;
+DROP TABLE IF EXISTS Demo_Mem.Person;
+DROP FUNCTION IF EXISTS MemOptTools.String$Replicate
 
-DROP SCHEMA IF EXISTS demo_mem;
+DROP SCHEMA IF EXISTS Demo_Mem;
+DROP SCHEMA IF EXISTS MemOptTools;
 GO
 
 CREATE SCHEMA Demo_Mem;
+GO
+
+CREATE SCHEMA MemOptTools; --to hold my replicate replacement
+GO
+
+CREATE OR ALTER FUNCTION MemOptTools.String$Replicate
+(
+    @inputString    nvarchar(1000),
+    @replicateCount smallint
+)
+RETURNS nvarchar(1000)
+WITH NATIVE_COMPILATION, SCHEMABINDING
+AS
+BEGIN ATOMIC WITH(TRANSACTION ISOLATION LEVEL = SNAPSHOT, 
+                  LANGUAGE = N'English')
+    DECLARE @i int = 0, @output nvarchar(1000) = '';
+
+    WHILE @i < @replicateCount
+    BEGIN
+        SET @output = @output + @inputString;
+        SET @i = @i + 1;
+    END;
+
+    RETURN @output;
+END;
 GO
 
 CREATE TABLE Demo_Mem.SingleTable
 (
     singleTableId int IDENTITY(1, 1) CONSTRAINT PKsingleTable PRIMARY KEY NONCLUSTERED HASH WITH(BUCKET_COUNT = 100),
     value         varchar(100),
-    padding       char(4000) --default (replicate('A',4000)) --NOT SUPPORTED
+    padding       char(4000) default (MemOptTools.String$Replicate('A',4000)) --REPLICATE NOT SUPPORTED, but this replicate substitute is
 )
 WITH (MEMORY_OPTIMIZED = ON);
-
-INSERT INTO Demo_Mem.SingleTable(Value, Padding)
-VALUES('Fred', REPLICATE('a', 4000)),
-(   'Barney', REPLICATE('a', 4000)),
-(   'Wilma', REPLICATE('a', 4000)),
-(   'Betty', REPLICATE('a', 4000)),
-(   'Mr_Slate', REPLICATE('a', 4000)),
-(   'Slagstone', REPLICATE('a', 4000)),
-(   'Gazoo', REPLICATE('a', 4000)),
-(   'Hoppy', REPLICATE('a', 4000)),
-(   'Schmoo', REPLICATE('a', 4000)),
-(   'Slaghoople', REPLICATE('a', 4000)),
-(   'Pebbles', REPLICATE('a', 4000)),
-(   'BamBam', REPLICATE('a', 4000)),
-(   'Rockhead', REPLICATE('a', 4000)),
-(   'Arnold', REPLICATE('a', 4000)),
-(   'ArnoldMom', REPLICATE('a', 4000)),
-(   'Tex', REPLICATE('a', 4000)),
-(   'Dino', REPLICATE('a', 4000));
+GO
+INSERT INTO Demo_Mem.SingleTable(Value)
+VALUES('Fred'),
+(   'Barney'),
+(   'Wilma'),
+(   'Betty'),
+(   'Mr_Slate'),
+(   'Slagstone'),
+(   'Gazoo'),
+(   'Hoppy'),
+(   'Schmoo'),
+(   'Slaghoople'),
+(   'Pebbles'),
+(   'BamBam'),
+(   'Rockhead'),
+(   'Arnold'),
+(   'ArnoldMom'),
+(   'Tex'),
+(   'Dino');
 GO
 
 CREATE TABLE Demo_Mem.Person
@@ -78,3 +105,4 @@ VALUES('Hello2', 'Hello There', SYSDATETIME(), 9);
 INSERT INTO Demo_Mem.Interaction(Subject, Message, InteractionTime, PersonId)
 VALUES('Hello3', 'Hello There', SYSDATETIME(), 8);
 GO
+

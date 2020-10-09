@@ -8,8 +8,8 @@ GO
 --:r "C:\Users\louis\Dropbox\Projects 2016\_SettingsFiles\SQL2016Variables.sql"
 
 ----locate where you want data and logs
-:setvar dataFile "C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\MSSQL\DATA\"
-:setvar logFile "C:\Program Files\Microsoft SQL Server\MSSQL14.MSSQLSERVER\MSSQL\DATA\"
+:setvar dataFile "O:\SQL Files\Data\SQL2019"
+:setvar logFile "O:\SQL Files\Data\SQL2019"
 
 --if no, and db exists, then it will fail
 :setvar DROPEXISTING Yes
@@ -18,17 +18,21 @@ GO
 :ON ERROR EXIT
 
 --database name
-:setvar DataBaseName LetMeFinish
+:setvar DataBaseName MattersOfConcurrency
+
 --SIMPLE FULL
 :setvar RecoveryMode Simple
+
 --ENABLED or DISABLED
 :setvar DelayedDurabity DISABLED
+
 --YES to create in mem filegroup
 :setvar IncludeInMem YES
 
 :setvar ReadCommittedSnapshot OFF
 :setvar SnapshotIsolationLevel OFF
 :setvar MemOptimizedElevateToSnapshot OFF
+:setvar AcceleratedDatabaseRecovery OFF
 
 :setvar databaseSize 30MB
 :setvar databaseMaxSize 2GB
@@ -82,13 +86,17 @@ ALTER DATABASE $(DataBaseName)
 	SET RECOVERY $(RecoveryMode)
 GO
 
-ALTER DATABASE LetMeFinish
+ALTER DATABASE $(DataBaseName) SET ACCELERATED_DATABASE_RECOVERY = $(AcceleratedDatabaseRecovery);
+
+
+
+ALTER DATABASE $(DataBaseName)
 	SET READ_COMMITTED_SNAPSHOT $(ReadCommittedSnapshot)
 GO
-ALTER DATABASE LetMeFinish
+ALTER DATABASE $(DataBaseName)
 	SET ALLOW_SNAPSHOT_ISOLATION $(SnapshotIsolationLevel)
 GO
-ALTER DATABASE LetMeFinish
+ALTER DATABASE $(DataBaseName)
   SET MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT $(MemOptimizedElevateToSnapshot)
 GO
 ALTER DATABASE $(DataBaseName) SET DELAYED_DURABILITY = $(DelayedDurabity)  

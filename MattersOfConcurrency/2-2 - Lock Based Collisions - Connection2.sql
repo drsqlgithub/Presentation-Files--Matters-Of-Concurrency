@@ -2,7 +2,7 @@ PRINT 'You tried to run the entire file'
 GO
 :EXIT
 
-USE LetMeFinish;
+USE MattersOfConcurrency;
 GO
 
 -------------------------------------------------
@@ -92,7 +92,7 @@ ROLLBACK;
 GO
 
 --NOTE: Later, we will see READ COMMITTED SNAPSHOT setting that would
---eliminate the blocking, but would NOT eliminate the performance issuesq
+--eliminate the blocking, but would NOT eliminate the performance issues
 
 -------------------------------------------------
 -- Scenario 4a:  (*) Writer (1) Reader (2)
@@ -280,11 +280,26 @@ SET    Subject = UPPER(Subject),
 --stop
 ROLLBACK;
 
+
+--all rows, with table lock
+IF @@TRANCOUNT > 0
+    ROLLBACK; --make sure there's no open transactions
+
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+BEGIN TRANSACTION;
+
+SELECT *
+FROM   Demo.Interaction 
+
+--stop
+ROLLBACK;
+
 -------------------------------------------------
 -- Scenario 11:  (*) Writer (1) Reader (2)
 --				show the change with READ COMMITTED SNAPSHOT
 -------------------------------------------------
-USE LetMeFinish;
+USE MattersOfConcurrency;
 GO
 
 IF @@TRANCOUNT > 0
@@ -307,7 +322,7 @@ GO
 -- Scenario 12:  Deadlock
 -------------------------------------------------
 
-USE LetMeFinish;
+USE MattersOfConcurrency;
 
 IF @@TRANCOUNT > 0
     ROLLBACK; --make sure there's no open transactions

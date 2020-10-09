@@ -1,5 +1,7 @@
 --Viewing data
-use LetMeFinish
+USE MattersOfConcurrency;
+GO
+SELECT @@SPID;
 GO
 
 --Description: Show locks held by READ UNCOMMITTED read only transaction 
@@ -9,6 +11,7 @@ BEGIN TRANSACTION
 SELECT *
 FROM   Demo.SingleTable
 
+--**
 --What will be locked?
 
 ROLLBACK TRANSACTION
@@ -19,12 +22,21 @@ SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 BEGIN TRANSACTION
 
 SELECT *
-FROM   Demo.SingleTable
+FROM   Demo.SingleTable --(HOLDLOCK)
 
+--**
 --What will be locked?
+
+
+--This will show you what was locked, by holding the locks for the transaction
+SELECT *
+FROM   Demo.SingleTable (HOLDLOCK)
+
+--**
 
 ROLLBACK TRANSACTION
 GO
+
 
 --Description: Show locks held by REPEATABLE READ read only transaction
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ
@@ -33,6 +45,7 @@ BEGIN TRANSACTION
 SELECT *
 FROM   Demo.SingleTable
 
+--**
 --What will be locked?
 
 ROLLBACK TRANSACTION
@@ -45,30 +58,41 @@ GO
 SELECT *
 FROM   Demo.SingleTable
 
+--**
 --What will be locked?
 
 ROLLBACK TRANSACTION
 GO
 
+
+
 --Description: Show locks held by SNAPSHOT (On Disk Tables) read only transaction
 
 --must turn on Snapshot Isolation Capabilities
-ALTER DATABASE LetMeFinish
+ALTER DATABASE MattersOfConcurrency
 	SET ALLOW_SNAPSHOT_ISOLATION ON
 GO
+
+
 SET TRANSACTION ISOLATION LEVEL SNAPSHOT
 BEGIN TRANSACTION
 
 SELECT *
 FROM   Demo.SingleTable
 
+--**
 --What will be locked?
 
 ROLLBACK TRANSACTION
 GO
 
 
+
+----------------------------------------------------------------------------------------------------------
+--********************************************************************************************************
 --Modifying data
+--********************************************************************************************************
+----------------------------------------------------------------------------------------------------------
 
 --Description: Show locks held by READ UNCOMMITTED modification transaction
 
@@ -80,6 +104,7 @@ UPDATE Demo.SingleTable
 SET Value = UPPER(Value)
 WHERE Value like 'F%'
 
+--**
 --What will be locked?
 
 ROLLBACK TRANSACTION
@@ -95,6 +120,7 @@ UPDATE Demo.SingleTable
 SET Value = UPPER(Value)
 WHERE Value like 'F%'
 
+--**
 --What will be locked?
 
 ROLLBACK TRANSACTION
@@ -110,7 +136,8 @@ UPDATE Demo.SingleTable
 SET Value = UPPER(Value)
 WHERE Value like 'F%'
 
---What will be locked?
+--**
+--What will be locked? (Note the IX lock on the object...)
 
 ROLLBACK TRANSACTION
 GO
@@ -124,6 +151,7 @@ UPDATE Demo.SingleTable
 SET Value = UPPER(Value)
 WHERE Value like 'F%'
 
+--**
 --What will be locked? (Note that SERIALIZABLE applies to the read of the table, so no new
 --rows could be created due to this requiring a table scan (no index on Value column)
 
@@ -139,8 +167,50 @@ UPDATE Demo.SingleTable
 SET Value = UPPER(Value)
 WHERE Value like 'F%'
 
-
---What will be locked?
+--**
+--What will be locked? (The purpose this time is far different, but still is fairly a hefty cost)
 
 ROLLBACK TRANSACTION
 GO
+
+----------------------------------------------------------------------------------------------------------
+--********************************************************************************************************
+--Adding indexes
+--********************************************************************************************************
+----------------------------------------------------------------------------------------------------------
+
+
+CREATE INDEX Value ON Demo.SingleTable(Value);
+
+
+--Querying the data 
+
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ
+BEGIN TRANSACTION
+
+SELECT *
+FROM   Demo.SingleTable
+WHERE Value like 'F%'
+
+--**
+--What will be locked? 
+
+ROLLBACK;
+
+
+
+--Modifying the data 
+
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ
+BEGIN TRANSACTION
+
+UPDATE Demo.SingleTable
+SET Value = UPPER(Value)
+WHERE Value = 'Fred' --changed to =, to show it is the least rows touched
+
+--**
+--What will be locked? 
+
+ROLLBACK
+
+

@@ -2,7 +2,7 @@ PRINT 'You tried to run the entire file'
 GO
 :EXIT
 
-USE LetMeFinish;
+USE MattersOfConcurrency;
 GO
 
 -------------------------------------------------
@@ -21,6 +21,7 @@ FROM   Demo_Mem.SingleTable WITH (SNAPSHOT)
 WHERE  Value = 'Fred';
 GO
 
+--**
 --stop, run next after commit
 
 BEGIN TRANSACTION;

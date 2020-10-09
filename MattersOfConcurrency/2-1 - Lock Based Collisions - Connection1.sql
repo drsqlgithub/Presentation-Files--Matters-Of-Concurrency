@@ -2,48 +2,7 @@ PRINT 'You tried to run the entire file'
 GO
 :EXIT
 
-USE LetMeFinish;
-GO
--------------------------------------------------
--- Scenario 0:  (*) Reader 
---              Locks held in read READ COMMITTED Tran
--------------------------------------------------
-
-IF @@TRANCOUNT > 0
-    ROLLBACK; --make sure there's no open transactions
-
-SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-
-BEGIN TRANSACTION;
-
-SELECT *
-FROM   Demo.SingleTable;
-GO
-
---stop - Show _LockViewer results
-
-ROLLBACK;
-GO
-
--------------------------------------------------
--- Scenario 0b:  (*) Reader 
---              Locks held in read REPEATABLE READ Tran
--------------------------------------------------
-
-IF @@TRANCOUNT > 0
-    ROLLBACK; --make sure there's no open transactions
-
-SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-
-BEGIN TRANSACTION;
-
-SELECT *
-FROM   Demo.SingleTable;
-GO
-
---stop - Show _LockViewer results
-
-ROLLBACK;
+USE MattersOfConcurrency;
 GO
 
 -------------------------------------------------
@@ -83,13 +42,22 @@ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 BEGIN TRANSACTION;
 
 SELECT *
-FROM   Demo.SingleTable WITH(XLOCK);
+FROM   Demo.SingleTable WITH (XLOCK); --(adding PAGLOCK will cause blocking, AND PAGE locks!)
 GO
 
 --stop, show lock viewer
 
 ROLLBACK;
 GO
+
+/*
+EXECUTE the following (not in the transaction) to dirty, and the previous example doesn't hold until the CHECKPOINT occurs (which is by default every minute):
+UPDATE Demo.SingleTable
+SET Value = Value + ' ';
+
+UPDATE Demo.SingleTable
+SET Value = RTRIM(Value);
+*/
 
 -------------------------------------------------
 -- Scenario 3:  (*) Writer (1) Reader (2)
@@ -348,13 +316,13 @@ IF @@TRANCOUNT > 0
 --make sure there's no open transactions
 
 --kills all other connections
-ALTER DATABASE LetMeFinish SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+ALTER DATABASE MattersOfConcurrency SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
 GO
 
-ALTER DATABASE LetMeFinish SET READ_COMMITTED_SNAPSHOT ON; --changes to allow snapshot for read committed transactions
+ALTER DATABASE MattersOfConcurrency SET READ_COMMITTED_SNAPSHOT ON; --changes to allow snapshot for read committed transactions
 GO
 
-ALTER DATABASE LetMeFinish SET MULTI_USER;
+ALTER DATABASE MattersOfConcurrency SET MULTI_USER;
 GO
 
 --stop
@@ -383,7 +351,7 @@ GO
 /* Add read committed snapshot setting to db
 --change other connection to different tb
 
-ALTER DATABASE LetMeFinish
+ALTER DATABASE MattersOfConcurrency
 SET READ_COMMITTED_SNAPSHOT OFF
 GO
 */

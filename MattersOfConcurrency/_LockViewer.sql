@@ -1,8 +1,9 @@
-USE LetMeFinish;
+USE MattersOfConcurrency;
 
-DECLARE @spidToWatch int = NULL;
+DECLARE @spidToWatch table (spid int);
+INSERT INTO @spidToWatch(spid)
+VALUES(52)
 
---declare @spidToWatch int = 53
 
 --query taken from: https://www.simple-talk.com/sql/database-administration/investigating-transactions-using-dynamic-management-objects/
 --written by Timothy Ford (adapted from adapted from a chapter of 'Performance Tuning with SQL Server Dynamic Management' by Tim and myself..
@@ -57,6 +58,12 @@ FROM     sys.dm_tran_locks DTL
          OUTER APPLY sys.dm_exec_sql_text(DEC.most_recent_sql_handle) AS DEST_C
          OUTER APPLY sys.dm_exec_sql_text(DER.sql_handle) AS DEST_R
 WHERE    DTL.resource_database_id = DB_ID()
-    AND (   DTL.request_session_id = @spidToWatch
-            OR @spidToWatch IS NULL) --My Connection
+    AND (   DTL.request_session_id IN (SELECT spid FROM @spidToWatch)
+            OR NOT EXISTS (SELECT spid FROM @spidToWatch) ) --My Connection
 ORDER BY DTL.request_session_id;
+
+/*Lookup the page:
+DECLARE @databaseId int = db_id()
+DBCC TRACEON(3604)
+DBCC PAGE(@databaseId,1,284,3) --for page 1:280
+*/
