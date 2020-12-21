@@ -50,15 +50,6 @@ GO
 ROLLBACK;
 GO
 
-/*
-EXECUTE the following (not in the transaction) to dirty, and the previous example doesn't hold until the CHECKPOINT occurs (which is by default every minute):
-UPDATE Demo.SingleTable
-SET Value = Value + ' ';
-
-UPDATE Demo.SingleTable
-SET Value = RTRIM(Value);
-*/
-
 -------------------------------------------------
 -- Scenario 3:  (*) Writer (1) Reader (2)
 --				show how an update effects readers

@@ -117,7 +117,7 @@ SET TRANSACTION ISOLATION LEVEL READ COMMITTED
 BEGIN TRANSACTION
 
 UPDATE Demo.SingleTable
-SET Value = UPPER(Value)
+SET Value = 'Fred' 
 WHERE Value like 'F%'
 
 --**
@@ -172,45 +172,4 @@ WHERE Value like 'F%'
 
 ROLLBACK TRANSACTION
 GO
-
-----------------------------------------------------------------------------------------------------------
---********************************************************************************************************
---Adding indexes
---********************************************************************************************************
-----------------------------------------------------------------------------------------------------------
-
-
-CREATE INDEX Value ON Demo.SingleTable(Value);
-
-
---Querying the data 
-
-SET TRANSACTION ISOLATION LEVEL REPEATABLE READ
-BEGIN TRANSACTION
-
-SELECT *
-FROM   Demo.SingleTable
-WHERE Value like 'F%'
-
---**
---What will be locked? 
-
-ROLLBACK;
-
-
-
---Modifying the data 
-
-SET TRANSACTION ISOLATION LEVEL REPEATABLE READ
-BEGIN TRANSACTION
-
-UPDATE Demo.SingleTable
-SET Value = UPPER(Value)
-WHERE Value = 'Fred' --changed to =, to show it is the least rows touched
-
---**
---What will be locked? 
-
-ROLLBACK
-
 

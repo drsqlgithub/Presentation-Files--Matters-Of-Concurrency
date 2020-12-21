@@ -12,7 +12,7 @@ GO
 --What will happen?
 
 IF @@TRANCOUNT > 0
-    ROLLBACK; --make sure there's no open transactions
+    ROLLBACK; --make sure there's no other open transactions
 
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 

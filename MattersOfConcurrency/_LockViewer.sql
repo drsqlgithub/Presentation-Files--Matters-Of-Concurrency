@@ -2,7 +2,7 @@ USE MattersOfConcurrency;
 
 DECLARE @spidToWatch table (spid int);
 INSERT INTO @spidToWatch(spid)
-VALUES(52)
+VALUES(77),(66)
 
 
 --query taken from: https://www.simple-talk.com/sql/database-administration/investigating-transactions-using-dynamic-management-objects/

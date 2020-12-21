@@ -3,10 +3,6 @@ GO
 
 --Turn on SQLCMD Mode to run this script
 
---variables that are common across all projects
---:r "C:\Users\louis\Dropbox\Projects 2014\_SettingsFiles\SQL2014Variables.sql"
---:r "C:\Users\louis\Dropbox\Projects 2016\_SettingsFiles\SQL2016Variables.sql"
-
 ----locate where you want data and logs
 :setvar dataFile "O:\SQL Files\Data\SQL2019"
 :setvar logFile "O:\SQL Files\Data\SQL2019"
@@ -152,7 +148,7 @@ GO
 
 CREATE TABLE Demo.SingleTable
 (
-    SingleTableId int         IDENTITY(1, 1) CONSTRAINT PKsingleTable PRIMARY KEY,
+    SingleTableId int         IDENTITY(1, 1) CONSTRAINT PKSingleTable PRIMARY KEY,
     Value         varchar(100),                                                                --*******no key on value for demo purposes******
     Padding       char(4000)  CONSTRAINT DFTLSingleTable_Padding DEFAULT(REPLICATE('a', 4000)) --so all rows not on single page
 
